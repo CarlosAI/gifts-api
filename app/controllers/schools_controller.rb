@@ -3,9 +3,16 @@ class SchoolsController < ApplicationController
 
   # GET /schools
   def index
-    @schools = School.all
+    service = ValidateService::TokenAuthentication.new
+    if service.validarToken(request.headers["AUTH-TOKEN"])
+      @response = School.all
+      status = 200
+    else
+      @response = {"Status"=>"Error", "code"=>"401", "message"=>"Unauthorized"}
+      status = 401
+    end
 
-    render json: @schools
+    render json: @response, status: 401
   end
 
   # GET /schools/1
