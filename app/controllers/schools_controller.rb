@@ -1,18 +1,16 @@
 class SchoolsController < ApplicationController
   before_action :set_school, only: [:show, :update, :destroy]
+  before_action :validar_token_api
 
   # GET /schools
   def index
-    service = ValidateService::TokenAuthentication.new
-    if service.validarToken(request.headers["AUTH-TOKEN"])
-      @response = School.all
-      status = 200
-    else
-      @response = {"Status"=>"Error", "code"=>"401", "message"=>"Unauthorized"}
-      status = 401
+    page = 1
+    if params["page"].present? && params["page"].to_s.to_i > 0
+      page = params["pages"]
     end
-
-    render json: @response, status: 401
+    @schools = School.all
+    @schools = @schools.order(id: :desc).paginate(:page => page, :per_page =>20)
+    render json: @schools, status: 200
   end
 
   # GET /schools/1
@@ -22,27 +20,57 @@ class SchoolsController < ApplicationController
 
   # POST /schools
   def create
-    @school = School.new(school_params)
-
-    if @school.save
-      render json: @school, status: :created, location: @school
+    service = ValidateService::ParamsValidation.new
+    permitted = params.permit(:address, :name)
+    if service.validarSchool(permitted)
+      if School.find_by_name(params["name"]).nil?
+        user = User.find_by_token(request.headers["Authorization"])
+        @school = School.new(permitted)
+        @school.user_id = user.id
+        if @school.save
+          render json: @school, status: 200, location: @school
+        else
+          render json: @school.errors, status: :unprocessable_entity
+        end
+      else
+        render json: {:status => "Error", :code => "400", :message => "School #{params["name"]} already exists"}, status: 400
+      end
     else
-      render json: @school.errors, status: :unprocessable_entity
+      invalid = service.getInvalidParamsSchool(permitted)
+      render json: {:status => "Error", :code => "400", :message => "Invalid Parameters", :invalid_parameters => invalid}, status: 400
     end
+    
   end
 
   # PATCH/PUT /schools/1
   def update
-    if @school.update(school_params)
-      render json: @school
+    service = ValidateService::ParamsValidation.new
+    permitted = params.permit(:address, :name)
+    if service.validarSchool(permitted)
+      if School.find_by_name(params["name"]).nil?
+        if @school.update(permitted)
+          render json: @school, status: 200, location: @school
+        else
+          render json: @school.errors, status: :unprocessable_entity
+        end
+      else
+        render json: {:status => "Error", :code => "400", :message => "School #{params["name"]} already exists"}, status: 400
+      end
     else
-      render json: @school.errors, status: :unprocessable_entity
+      invalid = service.getInvalidParamsSchool(permitted)
+      render json: {:status => "Error", :code => "400", :message => "Invalid Parameters", :invalid_parameters => invalid}, status: 400
     end
   end
 
   # DELETE /schools/1
   def destroy
-    @school.destroy
+    can_be_deleted = School.validarDelete(params[:id])
+    if can_be_deleted[0]
+      @school.destroy
+      render json: {:status => "Success", :code => "200", :message => "School Deleted"}, status: 200
+    else
+      render json: {:status => "Error", :code => "400", :message => can_be_deleted[1]}, status: 400
+    end
   end
 
   private

@@ -1,4 +1,4 @@
 class OrderRecipient < ApplicationRecord
-	belongs_to :recipients
-	belongs_to :orders
+	belongs_to :recipient
+	belongs_to :order
 end

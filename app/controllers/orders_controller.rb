@@ -4,6 +4,16 @@ class OrdersController < ApplicationController
   # GET /orders
   def index
     @orders = Order.all
+    # @orders = Order.joins(:order_details).select("gift_id")
+    # page = 1
+    # if params["page"].present? && params["page"].to_s.to_i > 0
+    #   page = params["pages"]
+    # end
+    # @orders = Order.all.select("id, school_id, (select name from schools where id=orders.school_id) as school_name, created_at, updated_at, (select name from users where id=orders.user_id) as created_by").order("id desc")
+    # @orders = @orders.where("school_id"=>params["school_id"]) if params["school_id"].present?
+    # @orders = @orders.where("status"=>params["status"]) if params["status"].present?
+    # @orders = @orders.paginate(:page => page, :per_page =>20)
+    # order_ids = @orders.pluck(:id)
 
     render json: @orders
   end
