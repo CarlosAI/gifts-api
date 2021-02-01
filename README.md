@@ -2,10 +2,11 @@
 
 Due to personal circumstances, the project was developed with:
 
-Ruby '2.5.3'
-Rails 5.2
+-Ruby '2.5.3'
+-Rails 5.2
 
 If you have any other version of Ruby, you can install and configure Ruby 2.5.3 and using rbenv to set Ruby 2.5.3 as the local version for the application.
+
 
 ##Configuration
 
