@@ -3,6 +3,11 @@ class School < ApplicationRecord
 	has_many :orders
 	belongs_to :user
 
+	before_create :set_deliveries
+
+	def set_status
+		self.deliveries = 0 
+	end
 
 	def self.validarDelete(school_id)
 		salida = [true]
