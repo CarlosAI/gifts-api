@@ -76,7 +76,9 @@ Now you can start testing the app, making some request and have fun withe the ap
 
 Please visit the API documentation so that you know and have the tools to start making a correct request to the API
 
-[API Documentation](https://api-gifts.herokuapp.com)
+[API Documentation](https://api-docs.charliebron.repl.co/)
+
+(If you have any problem when viewing the documentation (Since it is a free Hosting) contact me)
 
 Likewise, the project was launched on the Heroku platform, which you can also use to make API requests, just replacing the base url.
 
