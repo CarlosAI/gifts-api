@@ -11,22 +11,22 @@
 
 
 50.times {
-  users = User.all.sample
+  user = User.all.sample
   School.create!(
     name: Faker::University.name,
     address: Faker::Address.full_address,
-    user_id: users,
+    user_id: user.id,
   )
 }
 
 10.times {
-	users = User.all.sample
-	schools = School.all.sample
+	user = User.all.sample
+	school = School.all.sample
 	Recipient.create!(
     name: Faker::University.name,
     address: Faker::Address.full_address,
-    user_id: users,
-    school_id: schools
+    user_id: user.id,
+    school_id: school.id
   )
 }
 
@@ -40,7 +40,7 @@ data = Recipient.last
 user_id = User.last.id
 Order.create(school_id: data.school_id, user_id: user_id)
 order_id = Order.last.id
-gifts = Gift.all.sample
-recipients = Recipient.all.sample
-OrderDetail.create(order_id: order_id, gift_id: gifts)
-OrderRecipient.create(order_id: order_id, recipient_id: recipients)
+gift = Gift.all.sample
+recipient = Recipient.all.sample
+OrderDetail.create(order_id: order_id, gift_id: gift.id)
+OrderRecipient.create(order_id: order_id, recipient_id: recipient.id)
