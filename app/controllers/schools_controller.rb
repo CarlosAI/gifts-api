@@ -8,7 +8,7 @@ class SchoolsController < ApplicationController
     if params["page"].present? && params["page"].to_s.to_i > 0
       page = params["pages"]
     end
-    @schools = School.all
+    @schools = School.all.select("name, address, created_at, updated_at, (select name from users where id=schools.user_id) as created_by")
     @schools = @schools.order(id: :desc).paginate(:page => page, :per_page =>20)
     render json: @schools, status: 200
   end
@@ -44,39 +44,47 @@ class SchoolsController < ApplicationController
 
   # PATCH/PUT /schools/1
   def update
-    service = ValidateService::ParamsValidation.new
-    permitted = params.permit(:address, :name)
-    if service.validarSchool(permitted)
-      if School.find_by_name(params["name"]).nil?
-        if @school.update(permitted)
-          render json: @school, status: 200, location: @school
+    if @school.present?
+      service = ValidateService::ParamsValidation.new
+      permitted = params.permit(:address, :name)
+      if service.validarSchool(permitted)
+        if School.find_by_name(params["name"]).nil?
+          if @school.update(permitted)
+            render json: @school, status: 200, location: @school
+          else
+            render json: @school.errors, status: :unprocessable_entity
+          end
         else
-          render json: @school.errors, status: :unprocessable_entity
+          render json: {:status => "Error", :code => "400", :message => "School #{params["name"]} already exists"}, status: 400
         end
       else
-        render json: {:status => "Error", :code => "400", :message => "School #{params["name"]} already exists"}, status: 400
+        invalid = service.getInvalidParamsSchool(permitted)
+        render json: {:status => "Error", :code => "400", :message => "Invalid Parameters", :invalid_parameters => invalid}, status: 400
       end
     else
-      invalid = service.getInvalidParamsSchool(permitted)
-      render json: {:status => "Error", :code => "400", :message => "Invalid Parameters", :invalid_parameters => invalid}, status: 400
+      render json: {:status => "Error", :code => "400", :message => "School not found" }, status: 400
     end
   end
 
   # DELETE /schools/1
   def destroy
-    can_be_deleted = School.validarDelete(params[:id])
-    if can_be_deleted[0]
-      @school.destroy
-      render json: {:status => "Success", :code => "200", :message => "School Deleted"}, status: 200
+    if @school.present?
+      can_be_deleted = School.validarDelete(params[:id])
+      if can_be_deleted[0]
+        @school.destroy
+        render json: {:status => "Success", :code => "200", :message => "School Deleted"}, status: 200
+      else
+        render json: {:status => "Error", :code => "400", :message => can_be_deleted[1]}, status: 400
+      end
     else
-      render json: {:status => "Error", :code => "400", :message => can_be_deleted[1]}, status: 400
+      render json: {:status => "Error", :code => "400", :message => "School not found" }, status: 400
     end
   end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_school
-      @school = School.find(params[:id])
+      @school = School.find_by_id(params[:id])
     end
 
     # Only allow a trusted parameter "white list" through.

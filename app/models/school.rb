@@ -6,7 +6,7 @@ class School < ApplicationRecord
 	def self.validarDelete(school_id)
 		salida = [true]
 		existe = School.find_by_id(school_id)
-		if existe.present
+		if existe.present?
 			recipients = Recipient.where("school_id"=>school_id).take
 			if recipients.present?
 				salida = [false, "Can not delete school_id #{school_id}, there are recipients associated with this school"]
@@ -19,5 +19,6 @@ class School < ApplicationRecord
 		else
 			salida = [false, "School not found"]
 		end
+		return salida
 	end
 end

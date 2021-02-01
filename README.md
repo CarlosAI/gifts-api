@@ -1,6 +1,6 @@
 # gifts_api
 
-Due to personal circumstances, the project was developed with:
+The project was developed with:
 
 - Ruby '2.5.3'
 - Rails 5.2
@@ -70,3 +70,16 @@ Or if you need, you can specify another port by using
 bundle exec rails s -p 3027
 ```
 
+### Final Steps
+
+Now you can start testing the app, making some request and have fun withe the app.
+
+Please visit the API documentation so that you know and have the tools to start making a correct request to the API
+
+[API Documentation](https://api-gifts.herokuapp.com)
+
+Likewise, the project was launched on the Heroku platform, which you can also use to make API requests, just replacing the base url.
+
+Project link on the platform:
+
+https://api-gifts.herokuapp.com

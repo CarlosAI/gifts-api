@@ -15,6 +15,9 @@ class OrdersController < ApplicationController
 
   # GET /orders/1
   def show
+    if @order.nil?
+      render json: {:status => "Error", :code => "400", :message => "Order not found" }, status: 400
+    end
   end
 
   # POST /orders
@@ -39,43 +42,47 @@ class OrdersController < ApplicationController
 
   # PATCH/PUT /orders/1
   def update
-    service = ValidateService::ParamsValidation.new
-    permitted = params.permit(:status)
-    if service.validarUpdateOrder(permitted)
-      if @order.update(permitted)
-        puts "Order updated"
+    if @order.present?
+      service = ValidateService::ParamsValidation.new
+      permitted = params.permit(:status)
+      if service.validarUpdateOrder(permitted)
+        if @order.update(permitted)
+          puts "Order updated"
+        else
+          render json: @order.errors, status: :unprocessable_entity
+        end
       else
-        render json: @order.errors, status: :unprocessable_entity
+        invalid = service.getInvalidParamsSchool(permitted)
+        render json: {:status => "Error", :code => "400", :message => "Status #{params["status"]} is invalid", :invalid_parameters => "status"}, status: 400
       end
     else
-      invalid = service.getInvalidParamsSchool(permitted)
-      render json: {:status => "Error", :code => "400", :message => "Status #{params["status"]} is invalid", :invalid_parameters => "status"}, status: 400
+      render json: {:status => "Error", :code => "400", :message => "Order not found" }, status: 400
     end
   end
 
   def orders_ship
-    if @order.status == "ORDER_RECEIVED"
-      @order.status = "ORDER_PROCESSING"
-      @order.save
-    else
-      if @school.present?
-        render json: {:status => "Error", :code => "400", :message => "Order status is #{@order.status}" }, status: 400
+    if @order.present?
+      if @order.status == "ORDER_RECEIVED"
+        @order.status = "ORDER_PROCESSING"
+        @order.save
       else
-        render json: {:status => "Error", :code => "400", :message => "Order not found" }, status: 400
+        render json: {:status => "Error", :code => "400", :message => "Order status is #{@order.status}" }, status: 400
       end
+    else
+      render json: {:status => "Error", :code => "400", :message => "Order not found" }, status: 400
     end
   end
 
   def orders_cancel
-    if @order.status == "ORDER_RECEIVED" || @order.status == "ORDER_PROCESSING"
-      @order.status = "ORDER_CANCELLED"
-      @order.save
-    else
-      if @school.present?
-        render json: {:status => "Error", :code => "400", :message => "Order status is #{@order.status}" }, status: 400
+    if @order.present?
+      if @order.status == "ORDER_RECEIVED" || @order.status == "ORDER_PROCESSING"
+        @order.status = "ORDER_CANCELLED"
+        @order.save
       else
-        render json: {:status => "Error", :code => "400", :message => "Order not found" }, status: 400
+        render json: {:status => "Error", :code => "400", :message => "Order status is #{@order.status}" }, status: 400
       end
+    else
+      render json: {:status => "Error", :code => "400", :message => "Order not found" }, status: 400
     end
   end
 
@@ -87,7 +94,7 @@ class OrdersController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_order
-      @order = Order.find(params[:id])
+      @order = Order.find_by_id(params[:id])
     end
 
     # Only allow a trusted parameter "white list" through.

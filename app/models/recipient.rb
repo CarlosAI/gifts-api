@@ -15,5 +15,6 @@ class Recipient < ApplicationRecord
 		else
 			salida = [false, "Recipient not found"]
 		end
+		return salida
 	end
 end

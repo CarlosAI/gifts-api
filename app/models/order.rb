@@ -42,9 +42,6 @@ class Order < ApplicationRecord
 				n_or.recipient_id = recipient.id
 				n_or.save
 			end
-			escuela = School.find_by_id(school_id)
-			escuela.deliveries = escuela.deliveries + ( params["gifts"].size* params["recipients"].size)
-			escuela.save
 			salida = [true, orden.id]
 		else
 			salida = [false, orden.errors.messages]

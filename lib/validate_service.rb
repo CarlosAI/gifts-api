@@ -45,7 +45,7 @@ module ValidateService
 				if params["school_id"].nil? || params["school_id"].to_s.gsub(" ","") == ""
 					salida << "school_id"
 				else
-					salida << "None school was found with school_id #{school_id}" if School.find_by_id(params["school_id"].to_s.to_i).nil?
+					salida << "None school was found with school_id #{params["school_id"]}" if School.find_by_id(params["school_id"].to_s.to_i).nil?
 				end
 			else
 				salida = ["address", "name", "school_id"]
@@ -89,7 +89,7 @@ module ValidateService
 									same_school = Recipient.where("id in (?)", params["recipients"]).pluck(:school_id).uniq
 									if same_school.size == 1
 										envios = params["recipients"].size * params["gifts"].size
-										gifts_enviados = self.validar_limite_ordenes(same_school)
+										gifts_enviados = validar_limite_ordenes(same_school)
 										if gifts_enviados + envios <= 60
 											valid = true
 										end
@@ -117,6 +117,7 @@ module ValidateService
 							existen = false
 						end
 					end
+					existen_r = true
 					if existen
 						existen_r
 						params["recipients"].each do |g|
@@ -130,9 +131,9 @@ module ValidateService
 									same_school = Recipient.where("id in (?)", params["recipients"]).pluck(:school_id).uniq
 									if same_school.size == 1
 										envios = params["recipients"].size * params["gifts"].size
-										gifts_enviados = self.validar_limite_ordenes(same_school)
+										gifts_enviados = validar_limite_ordenes(same_school)
 										if gifts_enviados + envios > 60
-											salida << "Limit of 60 gifts per day reached for the school #{escuela.name}"
+											salida << "Limit of 60 gifts per day reached for the school #{same_school}"
 										end
 									else
 										salida << "The Recipients belong to different schools"
@@ -141,7 +142,7 @@ module ValidateService
 									salida << "Limit number of recipients reached, maximun number allowed is 20"
 								end
 							else
-								repetidos = self.list_duplicates(params["recipients"])
+								repetidos = list_duplicates(params["recipients"])
 								salida << "The next recipients are duplicated: #{repetidos}"
 							end
 						else
@@ -163,14 +164,14 @@ module ValidateService
 			return salida
 		end
 
-		def self.list_duplicates(array)
+		def list_duplicates(array)
 		  duplicates = array.select { |e| array.count(e) > 1 }
 		  duplicates.uniq
 		end
 
-		def self.validar_limite_ordenes(school_id)
+		def validar_limite_ordenes(school_id)
 			date = Time.now.in_time_zone("Mexico City").to_date
-			ordenes = Order.where(:created_at => date.beginning_of_day..date.end_of_day)
+			ordenes = Order.where("school_id"=>school_id).where(:created_at => date.beginning_of_day..date.end_of_day)
 			gifts_enviados = 0
 			ordenes.each do |x|
 				gifts = OrderDetail.where("order_id"=>x.id).count

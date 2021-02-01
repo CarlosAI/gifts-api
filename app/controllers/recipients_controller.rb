@@ -27,7 +27,8 @@ class RecipientsController < ApplicationController
     permitted = params.permit(:address, :name, :school_id)
 
     if service.validarRecipient(permitted)
-      if Recipient.where("name"=>permitted["name"], "school_id"=>permitted["school_id"]).nil?
+      puts permitted
+      if Recipient.where("name"=>permitted["name"], "school_id"=>permitted["school_id"]).take.nil?
         user = User.find_by_token(request.headers["Authorization"])
         @recipient = Recipient.new(permitted)
         @recipient.user_id = user.id
@@ -37,7 +38,7 @@ class RecipientsController < ApplicationController
           render json: @recipient.errors, status: :unprocessable_entity
         end
       else
-        render json: {:status => "Error", :code => "400", :message => "Recipient #{params["name"]} already exists on school_id #{school_id}"}, status: 400
+        render json: {:status => "Error", :code => "400", :message => "Recipient #{params["name"]} already exists on school_id #{params["school_id"]}"}, status: 400
       end
     else
       invalid = service.getInvalidParamsRecipient(permitted)
@@ -47,41 +48,48 @@ class RecipientsController < ApplicationController
 
   # PATCH/PUT /recipients/1
   def update
+    if @recipient.present?
+      service = ValidateService::ParamsValidation.new
+      permitted = params.permit(:address, :name, :school_id)
 
-    service = ValidateService::ParamsValidation.new
-     permitted = params.permit(:address, :name, :school_id)
-
-    if service.validarRecipient(permitted)
-      if Recipient.find_by_name(params["name"]).nil?
-        if @recipient.update(permitted)
-          render json: @recipient, status: 200, location: @recipient
+      if service.validarRecipient(permitted)
+        if Recipient.find_by_name(params["name"]).nil?
+          if @recipient.update(permitted)
+            render json: @recipient, status: 200, location: @recipient
+          else
+            render json: @recipient.errors, status: :unprocessable_entity
+          end
         else
-          render json: @recipient.errors, status: :unprocessable_entity
+          render json: {:status => "Error", :code => "400", :message => "School #{params["name"]} already exists"}, status: 400
         end
       else
-        render json: {:status => "Error", :code => "400", :message => "School #{params["name"]} already exists"}, status: 400
+        invalid = service.getInvalidParamsRecipient(permitted)
+        render json: {:status => "Error", :code => "400", :message => "Invalid Parameters", :invalid_parameters => invalid}, status: 400
       end
     else
-      invalid = service.getInvalidParamsRecipient(permitted)
-      render json: {:status => "Error", :code => "400", :message => "Invalid Parameters", :invalid_parameters => invalid}, status: 400
+      render json: {:status => "Error", :code => "400", :message => "Recipient not found" }, status: 400
     end
   end
 
   # DELETE /recipients/1
   def destroy
-    can_be_deleted = Recipient.validarDelete(params[:id])
-    if can_be_deleted[0]
-      @recipient.destroy
-      render json: {:status => "Success", :code => "200", :message => "Recipient Deleted"}, status: 200
+    if @recipient.present?
+      can_be_deleted = Recipient.validarDelete(params[:id])
+      if can_be_deleted[0]
+        @recipient.destroy
+        render json: {:status => "Success", :code => "200", :message => "Recipient Deleted"}, status: 200
+      else
+        render json: {:status => "Error", :code => "400", :message => can_be_deleted[1]}, status: 400
+      end
     else
-      render json: {:status => "Error", :code => "400", :message => can_be_deleted[1]}, status: 400
+      render json: {:status => "Error", :code => "400", :message => "Recipient not found" }, status: 400
     end
   end
 
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_recipient
-      @recipient = Recipient.find(params[:id])
+      @recipient = Recipient.find_by_id(params[:id])
     end
 
     # Only allow a trusted parameter "white list" through.
