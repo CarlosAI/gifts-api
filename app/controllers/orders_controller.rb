@@ -1,6 +1,6 @@
 class OrdersController < ApplicationController
   before_action :set_order, only: [:show, :update, :destroy, :orders_ship, :orders_cancel]
-
+  before_action :validar_token_api
   # GET /orders
   def index
     @orders = Order.all

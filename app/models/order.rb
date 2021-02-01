@@ -5,9 +5,18 @@ class Order < ApplicationRecord
 	has_many :order_recipients
 
 	before_create :set_status
+	before_update :verificar_flag
 
 	def set_status
 		self.status = "ORDER_RECEIVED" 
+		self.send_email = false
+	end
+
+	def verificar_flag
+		if status == "ORDER_SHIPPED"
+			self.send_email = true
+			### A background proccess can be called here to send te email
+		end
 	end
 
 	def self.generar_orden(permitted, token)
