@@ -8,7 +8,7 @@ Due to personal circumstances, the project was developed with:
 If you have any other version of Ruby, you can install and configure Ruby 2.5.3 and using rbenv to set Ruby 2.5.3 as the local version for the application.
 
 
-###Configuration
+### Configuration
 
 The application uses the following additional libraries:
 
@@ -18,7 +18,7 @@ The application uses the following additional libraries:
 	- faker
 
 
-###Getting Started
+### Getting Started
 
 Clone the repo and be sure of being on the HEAD of the master branch
 
